@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <schemalist>
-  <schema id="org.gnome.shell.extensions.desktop-photo" path="/org/gnome/shell/extensions/desktop-photo/">
-    <key name="image-path" type="s">
-      <default>""</default>
-      <summary>Selected image file path</summary>
-      <description>The absolute system file path to the image rendered on the desktop.</description>
-    </key>
-  </schema>
+
+    <schema
+        id="org.gnome.shell.extensions.desktop-photo"
+        path="/org/gnome/shell/extensions/desktop-photo/">
+
+        <key name="image-path" type="s">
+            <default>""</default>
+            <summary>Desktop image path</summary>
+            <description>
+                Absolute path of the image displayed on the desktop.
+            </description>
+        </key>
+
+    </schema>
+
 </schemalist>

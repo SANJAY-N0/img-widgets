@@ -1,88 +1,129 @@
 import Adw from 'gi://Adw';
-import Gio from 'gi://Gio';
 import Gtk from 'gi://Gtk';
-import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+import Gio from 'gi://Gio';
+
+import {
+    ExtensionPreferences,
+} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 export default class DesktopPhotoPreferences extends ExtensionPreferences {
+
     fillPreferencesWindow(window) {
         const settings = this.getSettings();
 
         const page = new Adw.PreferencesPage({
-            title: 'General',
-            icon_name: 'preferences-system-symbolic',
+            title: 'Desktop Photo',
+            icon_name: 'image-x-generic-symbolic',
         });
+
         window.add(page);
 
         const group = new Adw.PreferencesGroup({
-            title: 'Desktop Photo Widget',
-            description: 'Choose an image file to display on your desktop.',
+            title: 'Desktop Image',
+            description: 'Choose an image to display on your desktop.',
         });
+
         page.add(group);
 
         const currentPath = settings.get_string('image-path');
+
         const pathRow = new Adw.ActionRow({
-            title: 'Selected:',
-            subtitle: currentPath || 'None',
+            title: 'Selected Image',
+            subtitle: currentPath || 'No image selected',
         });
 
+        group.add(pathRow);
+
         const chooseButton = new Gtk.Button({
-            label: 'Browse...',
+            label: 'Choose Image',
             valign: Gtk.Align.CENTER,
         });
 
         const chooseRow = new Adw.ActionRow({
-            title: 'Choose Image',
-            subtitle: 'Supported formats: .jpg, .jpeg, .png, .webp',
+            title: 'Desktop Image',
+            subtitle: 'Select JPG, PNG or WebP',
         });
 
         chooseRow.add_suffix(chooseButton);
         chooseRow.set_activatable_widget(chooseButton);
 
         group.add(chooseRow);
-        group.add(pathRow);
 
-        const signalId = settings.connect('changed::image-path', () => {
-            const updatedPath = settings.get_string('image-path');
-            pathRow.set_subtitle(updatedPath || 'None');
+        const clearButton = new Gtk.Button({
+            label: 'Clear',
+            valign: Gtk.Align.CENTER,
         });
 
+        const clearRow = new Adw.ActionRow({
+            title: 'Remove Image',
+            subtitle: 'Remove the image from the desktop.',
+        });
+
+        clearRow.add_suffix(clearButton);
+
+        group.add(clearRow);
+
+        const changedId = settings.connect(
+            'changed::image-path',
+            () => {
+                const path = settings.get_string('image-path');
+
+                pathRow.set_subtitle(
+                    path || 'No image selected'
+                );
+            }
+        );
+
         window.connect('close-request', () => {
-            settings.disconnect(signalId);
+            settings.disconnect(changedId);
         });
 
         chooseButton.connect('clicked', () => {
-            const fileDialog = new Gtk.FileDialog({
-                title: 'Select Desktop Photo',
-                modal: true,
+            const dialog = new Gtk.FileDialog({
+                title: 'Select Desktop Image',
             });
 
             const filter = new Gtk.FileFilter();
-            filter.set_name('Supported Images (*.jpg, *.jpeg, *.png, *.webp)');
+
+            filter.set_name('Images');
+
             filter.add_mime_type('image/jpeg');
             filter.add_mime_type('image/png');
             filter.add_mime_type('image/webp');
-            filter.add_pattern('*.jpg');
-            filter.add_pattern('*.jpeg');
-            filter.add_pattern('*.png');
-            filter.add_pattern('*.webp');
 
-            const filterList = new Gio.ListStore({ item_type: Gtk.FileFilter });
-            filterList.append(filter);
-            fileDialog.set_filters(filterList);
+            const filters = new Gio.ListStore({
+                item_type: Gtk.FileFilter,
+            });
 
-            fileDialog.open(window, null, (dialog, result) => {
+            filters.append(filter);
+
+            dialog.set_filters(filters);
+
+            dialog.open(window, null, (dialog, result) => {
                 try {
-                    const selectedFile = dialog.open_finish(result);
-                    if (selectedFile) {
-                        const path = selectedFile.get_path();
-                        if (path) {
-                            settings.set_string('image-path', path);
-                        }
+                    const file = dialog.open_finish(result);
+
+                    if (!file) {
+                        return;
                     }
+
+                    const path = file.get_path();
+
+                    if (path) {
+                        settings.set_string(
+                            'image-path',
+                            path
+                        );
+                    }
+
                 } catch (error) {
-                    // Ignore user dialog dismissal
+                    // User cancelled the dialog.
                 }
             });
+        });
+
+        clearButton.connect('clicked', () => {
+            settings.set_string('image-path', '');
         });
     }
 }
