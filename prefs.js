@@ -6,33 +6,34 @@ import {
     ExtensionPreferences,
 } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-export default class DesktopPhotoPreferences extends ExtensionPreferences {
+export default class DesktopPhotoPreferences
+    extends ExtensionPreferences {
 
     fillPreferencesWindow(window) {
         const settings = this.getSettings();
 
         const page = new Adw.PreferencesPage({
             title: 'Desktop Photo',
-            icon_name: 'image-x-generic-symbolic',
         });
 
         window.add(page);
 
         const group = new Adw.PreferencesGroup({
             title: 'Desktop Image',
-            description: 'Choose an image to display on your desktop.',
+            description:
+                'Select an image to display on your desktop.',
         });
 
         page.add(group);
 
-        const currentPath = settings.get_string('image-path');
-
-        const pathRow = new Adw.ActionRow({
+        const selectedRow = new Adw.ActionRow({
             title: 'Selected Image',
-            subtitle: currentPath || 'No image selected',
+            subtitle:
+                settings.get_string('image-path') ||
+                'No image selected',
         });
 
-        group.add(pathRow);
+        group.add(selectedRow);
 
         const chooseButton = new Gtk.Button({
             label: 'Choose Image',
@@ -40,13 +41,11 @@ export default class DesktopPhotoPreferences extends ExtensionPreferences {
         });
 
         const chooseRow = new Adw.ActionRow({
-            title: 'Desktop Image',
-            subtitle: 'Select JPG, PNG or WebP',
+            title: 'Choose Image',
+            subtitle: 'JPG, JPEG, PNG or WebP',
         });
 
         chooseRow.add_suffix(chooseButton);
-        chooseRow.set_activatable_widget(chooseButton);
-
         group.add(chooseRow);
 
         const clearButton = new Gtk.Button({
@@ -56,26 +55,26 @@ export default class DesktopPhotoPreferences extends ExtensionPreferences {
 
         const clearRow = new Adw.ActionRow({
             title: 'Remove Image',
-            subtitle: 'Remove the image from the desktop.',
+            subtitle: 'Remove the current desktop image',
         });
 
         clearRow.add_suffix(clearButton);
-
         group.add(clearRow);
 
-        const changedId = settings.connect(
+        const settingsId = settings.connect(
             'changed::image-path',
             () => {
-                const path = settings.get_string('image-path');
+                const path =
+                    settings.get_string('image-path');
 
-                pathRow.set_subtitle(
+                selectedRow.set_subtitle(
                     path || 'No image selected'
                 );
             }
         );
 
         window.connect('close-request', () => {
-            settings.disconnect(changedId);
+            settings.disconnect(settingsId);
         });
 
         chooseButton.connect('clicked', () => {
@@ -99,31 +98,40 @@ export default class DesktopPhotoPreferences extends ExtensionPreferences {
 
             dialog.set_filters(filters);
 
-            dialog.open(window, null, (dialog, result) => {
-                try {
-                    const file = dialog.open_finish(result);
+            dialog.open(
+                window,
+                null,
+                (dialog, result) => {
+                    try {
+                        const file =
+                            dialog.open_finish(result);
 
-                    if (!file) {
-                        return;
-                    }
+                        if (!file) {
+                            return;
+                        }
 
-                    const path = file.get_path();
+                        const path = file.get_path();
 
-                    if (path) {
-                        settings.set_string(
-                            'image-path',
-                            path
+                        if (path) {
+                            settings.set_string(
+                                'image-path',
+                                path
+                            );
+                        }
+                    } catch (error) {
+                        console.log(
+                            '[Desktop Photo Widget] File selection cancelled'
                         );
                     }
-
-                } catch (error) {
-                    // User cancelled the dialog.
                 }
-            });
+            );
         });
 
         clearButton.connect('clicked', () => {
-            settings.set_string('image-path', '');
+            settings.set_string(
+                'image-path',
+                ''
+            );
         });
     }
 }
