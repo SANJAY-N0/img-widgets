@@ -1,0 +1,13 @@
+{
+  "uuid": "desktop-photo-widget@sanjay.github.io",
+  "name": "Desktop Photo Widget",
+  "description": "Displays a custom photo directly on your GNOME desktop background layer.",
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48"
+  ],
+  "url": "https://github.com/sanjay/desktop-photo-widget",
+  "settings-schema": "org.gnome.shell.extensions.desktop-photo"
+}
